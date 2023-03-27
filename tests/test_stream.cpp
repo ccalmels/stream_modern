@@ -153,9 +153,9 @@ TEST(Stream, ranges) {
   EXPECT_EQ(s, std::string("hello"));
 }
 
-TEST(Stream, move) {
+TEST(Stream, swap) {
   std::stringstream output;
-  Stream payload;
+  static Stream payload;
   auto p1 = std::vector<u8>({0, 0, 0, 0, 0x1, 0x2a, 0x0, 0x0, 0x0});
   auto p2 = std::vector<u8>({0, 0, 0, 0, 5, 'h', 'e', 'l', 'l', 'o'});
 
@@ -170,7 +170,8 @@ TEST(Stream, move) {
   EXPECT_EQ(status, 1);
   EXPECT_EQ(id, 42);
 
-  Stream copy(std::move(payload));
+  Stream copy;
+  copy.swap(payload);
 
   std::stringstream().swap(output);
   output << copy;

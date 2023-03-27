@@ -71,6 +71,8 @@ public:
   explicit operator bool() const { return !!s_; };
   bool operator!() const { return !s_; };
 
+  void swap(Stream &other) { s_.swap(other.s_); }
+
   friend std::ostream &operator<<(std::ostream &os, const Stream &st);
 
 private:
