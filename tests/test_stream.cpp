@@ -11,6 +11,7 @@ TEST(Extract, extract) {
   st << std::string("foo");
   st << std::string("barbar");
 
+  EXPECT_TRUE(st);
   EXPECT_EQ(st.extract(sizeof(int)), std::vector<u8>({0xef, 0xbe, 0xad, 0xde}));
   EXPECT_EQ(st.extract(sizeof(short)), std::vector<u8>({0xac, 0xaf}));
   EXPECT_EQ(st.extract(4), std::vector<u8>({3, 'f', 'o', 'o'}));
@@ -26,6 +27,8 @@ TEST(Extract, extract_into) {
   st << (short)0xafac;
   st << std::string("foo");
   st << std::string("barbar");
+
+  EXPECT_TRUE(st);
 
   st.extract_into(a, sizeof(int));
   st.extract_into(b, sizeof(short));
@@ -47,6 +50,7 @@ TEST(Extract, extract_all) {
   st << std::string("foo");
   st << std::string("barbar");
 
+  EXPECT_TRUE(st);
   EXPECT_EQ(st.extract(), std::vector<u8>({
                               0xef,
                               0xbe,
@@ -77,6 +81,8 @@ TEST(Extract, extract_into_all) {
   st << std::string("foo");
   st << std::string("barbar");
 
+  EXPECT_TRUE(st);
+
   st.extract_into(a);
   EXPECT_EQ(a, std::vector<u8>({
                    'a', 'b', 0xef, 0xbe, 0xad, 0xde, 0xac, 0xaf, 3,   'f',
@@ -100,6 +106,8 @@ TEST(Write, write) {
   st << std::string("foo");
   st << std::string("bar");
 
+  EXPECT_TRUE(st);
+
   output << st;
 
   EXPECT_EQ(output.view(), "2a00000000000000"
@@ -120,15 +128,22 @@ TEST(Read, read) {
 
   st << std::vector<u8>({6, 'a', 'b', 'c', 'A', 'B', 'C'})
      << std::vector<u8>({3, 'f', 'o', 'o'})
-     << std::vector<u8>({3, 'b', 'a', 'r'});
+     << std::vector<u8>({3, 'b', 'a', 'r'})
+     << std::vector<u8>({0xef, 0xbe, 0xad, 0xde});
+
+  EXPECT_TRUE(st);
 
   std::string abc, foo, bar;
+  int deadbeef;
 
-  st >> abc >> foo >> bar;
+  st >> abc >> foo >> bar >> deadbeef;
+
+  EXPECT_TRUE(st);
 
   EXPECT_EQ(abc, std::string("abcABC"));
   EXPECT_EQ(foo, std::string("foo"));
   EXPECT_EQ(bar, std::string("bar"));
+  EXPECT_EQ(deadbeef, 0xdeadbeef);
 }
 
 TEST(Stream, ranges) {
@@ -140,6 +155,8 @@ TEST(Stream, ranges) {
   // remove headers
   payload << (p1 | std::views::drop(4)) << (p2 | std::views::drop(4));
 
+  EXPECT_TRUE(payload);
+
   output << payload;
   EXPECT_EQ(output.view(), "012a0000000568656c6c6f");
 
@@ -148,6 +165,9 @@ TEST(Stream, ranges) {
   std::string s;
 
   payload >> status >> id >> s;
+
+  EXPECT_TRUE(payload);
+
   EXPECT_EQ(status, 1);
   EXPECT_EQ(id, 42);
   EXPECT_EQ(s, std::string("hello"));
@@ -162,11 +182,14 @@ TEST(Stream, swap) {
   // remove headers
   payload << (p1 | std::views::drop(4)) << (p2 | std::views::drop(4));
 
+  EXPECT_TRUE(payload);
+
   u8 status;
   int id;
   std::string s;
 
-  payload >> status >> id >> s;
+  payload >> status >> id;
+  EXPECT_TRUE(payload);
   EXPECT_EQ(status, 1);
   EXPECT_EQ(id, 42);
 
@@ -182,6 +205,7 @@ TEST(Stream, swap) {
   EXPECT_EQ(output.view(), "");
 
   copy >> s;
+  EXPECT_TRUE(copy);
   EXPECT_EQ(s, std::string("hello"));
 }
 
@@ -193,6 +217,8 @@ TEST(Stream, split) {
   payload << (uint8_t)42;
   payload << std::string("foo");
   payload << std::string("bar");
+
+  EXPECT_TRUE(payload);
 
   std::vector<std::vector<u8>> ps;
 
@@ -233,7 +259,10 @@ TEST(Stream, serialize_deserialize) {
   Foo A, B;
 
   st << a << b;
+  EXPECT_TRUE(st);
+
   st >> A >> B;
+  EXPECT_TRUE(st);
 
   ASSERT_EQ(a, A);
   ASSERT_EQ(b, B);
