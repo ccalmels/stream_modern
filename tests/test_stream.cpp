@@ -3,9 +3,12 @@
 
 #include <stream.hpp>
 
-TEST(Extract, extract) {
-  Stream st;
+class StreamFixture : public ::testing::Test {
+protected:
+};
 
+TEST_F(StreamFixture, Extract) {
+  Stream st;
   st << (int)0xdeadbeef;
   st << (short)0xafac;
   st << std::string("foo");
@@ -18,7 +21,7 @@ TEST(Extract, extract) {
   EXPECT_EQ(st.extract(7), std::vector<u8>({6, 'b', 'a', 'r', 'b', 'a', 'r'}));
 }
 
-TEST(Extract, extract_into) {
+TEST_F(StreamFixture, ExtractInto) {
   Stream st;
   std::vector<u8> a, b = {'a', 'b'};
   std::vector<u8> as, bs = {'a', 's', 'b', 's'};
@@ -42,7 +45,7 @@ TEST(Extract, extract_into) {
                     {'a', 's', 'b', 's', 6, 'b', 'a', 'r', 'b', 'a', 'r'}));
 }
 
-TEST(Extract, extract_all) {
+TEST_F(StreamFixture, ExtractAll) {
   Stream st;
 
   st << (int)0xdeadbeef;
@@ -72,7 +75,7 @@ TEST(Extract, extract_all) {
                           }));
 }
 
-TEST(Extract, extract_into_all) {
+TEST_F(StreamFixture, ExtractIntoAll) {
   Stream st;
   std::vector<u8> a = {'a', 'b'};
 
@@ -90,9 +93,22 @@ TEST(Extract, extract_into_all) {
                }));
 }
 
-TEST(Write, write) {
+class StreamFixturePrinter : public StreamFixture {
+protected:
+  std::string_view view(const Stream &st) {
+    // reset/clean output_
+    std::stringstream().swap(output_);
+
+    output_ << st;
+
+    return output_.view();
+  }
+
+  std::stringstream output_;
+};
+
+TEST_F(StreamFixturePrinter, Write) {
   Stream st;
-  std::stringstream output;
 
   st << (uint64_t)42;
   st << (uint32_t)42;
@@ -107,23 +123,20 @@ TEST(Write, write) {
   st << std::string("bar");
 
   EXPECT_TRUE(st);
-
-  output << st;
-
-  EXPECT_EQ(output.view(), "2a00000000000000"
-                           "2a000000"
-                           "2a00"
-                           "2a"
-                           "d6ffffffffffffff"
-                           "d6ffffff"
-                           "d6ff"
-                           "d6"
-                           "06616263414243"
-                           "03666f6f"
-                           "03626172");
+  EXPECT_EQ(view(st), "2a00000000000000"
+                      "2a000000"
+                      "2a00"
+                      "2a"
+                      "d6ffffffffffffff"
+                      "d6ffffff"
+                      "d6ff"
+                      "d6"
+                      "06616263414243"
+                      "03666f6f"
+                      "03626172");
 }
 
-TEST(Read, read) {
+TEST_F(StreamFixturePrinter, Read) {
   Stream st;
 
   st << std::vector<u8>({6, 'a', 'b', 'c', 'A', 'B', 'C'})
@@ -146,8 +159,7 @@ TEST(Read, read) {
   EXPECT_EQ(deadbeef, 0xdeadbeef);
 }
 
-TEST(Stream, ranges) {
-  std::stringstream output;
+TEST_F(StreamFixturePrinter, Ranges) {
   Stream payload;
   auto p1 = std::vector<u8>({0, 0, 0, 0, 0x1, 0x2a, 0x0, 0x0, 0x0});
   auto p2 = std::vector<u8>({0, 0, 0, 0, 5, 'h', 'e', 'l', 'l', 'o'});
@@ -156,9 +168,7 @@ TEST(Stream, ranges) {
   payload << (p1 | std::views::drop(4)) << (p2 | std::views::drop(4));
 
   EXPECT_TRUE(payload);
-
-  output << payload;
-  EXPECT_EQ(output.view(), "012a0000000568656c6c6f");
+  EXPECT_EQ(view(payload), "012a0000000568656c6c6f");
 
   u8 status;
   int id;
@@ -173,8 +183,7 @@ TEST(Stream, ranges) {
   EXPECT_EQ(s, std::string("hello"));
 }
 
-TEST(Stream, swap) {
-  std::stringstream output;
+TEST_F(StreamFixturePrinter, Swap) {
   static Stream payload;
   auto p1 = std::vector<u8>({0, 0, 0, 0, 0x1, 0x2a, 0x0, 0x0, 0x0});
   auto p2 = std::vector<u8>({0, 0, 0, 0, 5, 'h', 'e', 'l', 'l', 'o'});
@@ -196,20 +205,15 @@ TEST(Stream, swap) {
   Stream copy;
   copy.swap(payload);
 
-  std::stringstream().swap(output);
-  output << copy;
-  EXPECT_EQ(output.view(), "012a0000000568656c6c6f");
-
-  std::stringstream().swap(output);
-  output << payload;
-  EXPECT_EQ(output.view(), "");
+  EXPECT_EQ(view(copy), "012a0000000568656c6c6f");
+  EXPECT_EQ(view(payload), "");
 
   copy >> s;
   EXPECT_TRUE(copy);
   EXPECT_EQ(s, std::string("hello"));
 }
 
-TEST(Stream, split) {
+TEST(Split, Split) {
   Stream payload;
 
   payload << (uint32_t)42;
@@ -253,7 +257,7 @@ struct Foo {
   }
 };
 
-TEST(Stream, serialize_deserialize) {
+TEST_F(StreamFixturePrinter, SerializeDeserialize) {
   Stream st;
   Foo a{.id = 42, .name = "I am a struct Foo"}, b{.id = 13, .name = "me too"};
   Foo A, B;
@@ -267,10 +271,8 @@ TEST(Stream, serialize_deserialize) {
   ASSERT_EQ(a, A);
   ASSERT_EQ(b, B);
 
-  std::stringstream output;
-  output << st;
-  ASSERT_EQ(output.view(), std::string("2a000000"
-                                       "114920616d20612073747275637420466f6f"
-                                       "0d000000"
-                                       "066d6520746f6f"));
+  ASSERT_EQ(view(st), std::string("2a000000"
+                                  "114920616d20612073747275637420466f6f"
+                                  "0d000000"
+                                  "066d6520746f6f"));
 }
