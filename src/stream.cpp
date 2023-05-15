@@ -27,6 +27,7 @@ Stream &Stream::operator<<(const std::string_view &sv) {
 
   return *this;
 }
+
 Stream &Stream::operator<<(const std::string &s) {
   return (*this) << (std::string_view)s;
 }

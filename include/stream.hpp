@@ -39,6 +39,7 @@ public:
       s_.write((const u8 *)&swapped, sizeof(swapped));
     } else
       s_.write((const u8 *)&value, sizeof(value));
+
     return *this;
   }
 
