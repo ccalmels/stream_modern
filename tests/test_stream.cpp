@@ -147,7 +147,7 @@ TEST_F(StreamFixturePrinter, Read) {
   EXPECT_TRUE(st);
 
   std::string abc, foo, bar;
-  int deadbeef;
+  unsigned int deadbeef;
 
   st >> abc >> foo >> bar >> deadbeef;
 
