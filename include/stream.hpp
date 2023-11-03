@@ -4,6 +4,7 @@
 #include <array>
 #include <bit>
 #include <concepts>
+#include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
