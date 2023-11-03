@@ -66,7 +66,7 @@ public:
     s_.write(std::ranges::cdata(range), std::ranges::size(range));
     return *this;
   }
-  Stream &operator<<(const std::string_view &sv);
+  Stream &operator<<(std::string_view sv);
   Stream &operator<<(const std::string &s);
   Stream &operator>>(std::string &s);
 

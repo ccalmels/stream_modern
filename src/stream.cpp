@@ -20,7 +20,7 @@ void Stream::extract_into(std::vector<u8> &v, size_t n) {
   v.resize(orig_size + s_.gcount());
 }
 
-Stream &Stream::operator<<(const std::string_view &sv) {
+Stream &Stream::operator<<(std::string_view sv) {
   s_ << (u8)sv.size();
 
   std::for_each(sv.begin(), sv.end(), [this](const auto e) { s_ << (u8)e; });
