@@ -21,10 +21,7 @@ stream_dep = declare_dependency(
 
 
 # tests
-gmock_dep = dependency(
-  'gmock', main : true,
-  fallback : [ 'gtest', 'gmock_main_dep' ],
-)
+gmock_dep = dependency('gmock_main')
 
 e = executable(
   'test_stream', sources : [
