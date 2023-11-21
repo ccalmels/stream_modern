@@ -21,13 +21,13 @@ stream_dep = declare_dependency(
 
 
 # tests
-gmock_dep = dependency('gmock_main')
+gtest_dep = dependency('gtest_main')
 
 e = executable(
   'test_stream', sources : [
     'tests/test_stream.cpp',
   ],
-  dependencies : [ gmock_dep, stream_dep ],
+  dependencies : [ gtest_dep, stream_dep ],
 )
 
 test('gtest test', e, args : '--gtest_output=xml:report.xml')
