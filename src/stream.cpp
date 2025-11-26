@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <stream.hpp>
 
 std::vector<u8> Stream::extract(size_t n) {
