@@ -63,7 +63,7 @@ class Stream {
 
     explicit operator bool() const { return !!s_; };
 
-    void swap(Stream &other) { s_.swap(other.s_); }
+    void swap(Stream &other) noexcept { s_.swap(other.s_); }
 
     friend std::ostream &operator<<(std::ostream &os, const Stream &st);
 
