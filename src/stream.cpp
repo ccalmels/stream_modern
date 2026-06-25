@@ -46,7 +46,7 @@ Stream &Stream::operator>>(std::string &s) {
     for (u8 i = 0; i < size; i++) {
         if (!((*this) >> element))
             break;
-        s.push_back((char)element);
+        s.push_back(static_cast<char>(element));
     }
 
     return *this;
