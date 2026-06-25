@@ -185,7 +185,7 @@ TEST_F(StreamFixturePrinter, Ranges) {
 }
 
 TEST_F(StreamFixturePrinter, Swap) {
-    static Stream payload;
+    Stream payload;
     auto p1 = std::vector<u8>({0, 0, 0, 0, 0x1, 0x2a, 0x0, 0x0, 0x0});
     auto p2 = std::vector<u8>({0, 0, 0, 0, 5, 'h', 'e', 'l', 'l', 'o'});
 
