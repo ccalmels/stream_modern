@@ -6,7 +6,6 @@
 #include <concepts>
 #include <cstdint>
 #include <ranges>
-#include <sstream>
 #include <vector>
 
 template <std::integral T> constexpr T byteswap(T value) noexcept {
@@ -61,23 +60,34 @@ class Stream {
     Stream &operator<<(const std::string &s);
     Stream &operator>>(std::string &s);
 
-    explicit operator bool() const { return !!s_; }
+    explicit operator bool() const { return !fail_; }
 
-    void swap(Stream &other) noexcept { s_.swap(other.s_); }
+    void swap(Stream &other) noexcept {
+        buf_.swap(other.buf_);
+        std::swap(read_pos_, other.read_pos_);
+        std::swap(fail_, other.fail_);
+    }
 
     friend std::ostream &operator<<(std::ostream &os, const Stream &st);
 
   private:
-    void write_(const u8 *ptr, size_t n) { s_.write(ptr, n); }
+    void write_(const u8 *ptr, size_t n) {
+        buf_.insert(buf_.end(), ptr, ptr + n);
+    }
+
     size_t read_(u8 *ptr, size_t n) {
-        s_.read(ptr, n);
-        return static_cast<size_t>(s_.gcount());
+        size_t available = buf_.size() - read_pos_;
+        size_t to_read = std::min(n, available);
+        std::copy_n(buf_.data() + read_pos_, to_read, ptr);
+        read_pos_ += to_read;
+        if (to_read < n)
+            fail_ = true;
+        return to_read;
     }
 
-    size_t remaining() {
-        return s_.view().size() -
-               static_cast<size_t>(static_cast<std::streamoff>(s_.tellg()));
-    }
+    size_t remaining() const { return buf_.size() - read_pos_; }
 
-    std::basic_stringstream<u8> s_;
+    std::vector<u8> buf_;
+    size_t read_pos_ = 0;
+    bool fail_ = false;
 };

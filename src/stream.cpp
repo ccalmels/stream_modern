@@ -56,7 +56,7 @@ std::ostream &operator<<(std::ostream &os, const Stream &st) {
     auto flags = os.setf(std::ios::hex, std::ios::basefield);
     auto prev_fill = os.fill('0');
 
-    std::ranges::for_each(st.s_.view(),
+    std::ranges::for_each(st.buf_,
                           [&os](const u8 e) { os << std::setw(2) << (int)e; });
 
     os.fill(prev_fill);
