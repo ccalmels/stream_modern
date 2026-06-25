@@ -8,6 +8,9 @@
 #include <ranges>
 #include <vector>
 
+using u8 = uint8_t;
+
+namespace stream_detail {
 template <std::integral T> constexpr T byteswap(T value) noexcept {
 #if __cpp_lib_byteswap < 202110L
     // snippet comes from cppreference.com
@@ -24,25 +27,25 @@ template <std::integral T> constexpr T byteswap(T value) noexcept {
     return std::byteswap<T>(value);
 #endif
 }
-using u8 = uint8_t;
+} // namespace stream_detail
 
 class Stream {
   public:
     template <std::integral T> Stream &operator<<(const T &value) {
         T v = value;
         if constexpr (std::endian::native == std::endian::big)
-            v = byteswap<T>(v);
+            v = stream_detail::byteswap<T>(v);
         auto bytes = std::bit_cast<std::array<u8, sizeof(T)>>(v);
         write_(bytes.data(), bytes.size());
         return *this;
     }
 
     template <std::integral T> Stream &operator>>(T &value) {
-        std::array<u8, sizeof(T)> bytes;
+        std::array<u8, sizeof(T)> bytes{};
         read_(bytes.data(), bytes.size());
         value = std::bit_cast<T>(bytes);
         if constexpr (std::endian::native == std::endian::big)
-            value = byteswap<T>(value);
+            value = stream_detail::byteswap<T>(value);
         return *this;
     }
 
@@ -52,7 +55,9 @@ class Stream {
     std::vector<u8> extract() { return extract(remaining()); }
     void extract_into(std::vector<u8> &v) { extract_into(v, remaining()); }
 
-    Stream &operator<<(const std::ranges::contiguous_range auto &range) {
+    template <std::ranges::contiguous_range R>
+        requires std::same_as<std::ranges::range_value_t<R>, u8>
+    Stream &operator<<(const R &range) {
         write_(std::ranges::cdata(range), std::ranges::size(range));
         return *this;
     }
