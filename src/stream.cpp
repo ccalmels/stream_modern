@@ -30,7 +30,7 @@ Stream &Stream::operator<<(std::string_view sv) {
 }
 
 Stream &Stream::operator<<(const std::string &s) {
-    return (*this) << (std::string_view)s;
+    return (*this) << std::string_view{s};
 }
 
 Stream &Stream::operator>>(std::string &s) {
