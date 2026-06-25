@@ -61,7 +61,7 @@ class Stream {
     Stream &operator<<(const std::string &s);
     Stream &operator>>(std::string &s);
 
-    explicit operator bool() const { return !!s_; };
+    explicit operator bool() const { return !!s_; }
 
     void swap(Stream &other) noexcept { s_.swap(other.s_); }
 
