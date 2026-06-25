@@ -34,13 +34,13 @@ class Stream {
         if constexpr (std::endian::native == std::endian::big)
             v = byteswap<T>(v);
         auto bytes = std::bit_cast<std::array<u8, sizeof(T)>>(v);
-        s_.write(bytes.data(), bytes.size());
+        write_(bytes.data(), bytes.size());
         return *this;
     }
 
     template <std::integral T> Stream &operator>>(T &value) {
         std::array<u8, sizeof(T)> bytes;
-        s_.read(bytes.data(), bytes.size());
+        read_(bytes.data(), bytes.size());
         value = std::bit_cast<T>(bytes);
         if constexpr (std::endian::native == std::endian::big)
             value = byteswap<T>(value);
@@ -54,7 +54,7 @@ class Stream {
     void extract_into(std::vector<u8> &v) { extract_into(v, remaining()); }
 
     Stream &operator<<(const std::ranges::contiguous_range auto &range) {
-        s_.write(std::ranges::cdata(range), std::ranges::size(range));
+        write_(std::ranges::cdata(range), std::ranges::size(range));
         return *this;
     }
     Stream &operator<<(std::string_view sv);
@@ -68,6 +68,12 @@ class Stream {
     friend std::ostream &operator<<(std::ostream &os, const Stream &st);
 
   private:
+    void write_(const u8 *ptr, size_t n) { s_.write(ptr, n); }
+    size_t read_(u8 *ptr, size_t n) {
+        s_.read(ptr, n);
+        return static_cast<size_t>(s_.gcount());
+    }
+
     size_t remaining() {
         return s_.view().size() -
                static_cast<size_t>(static_cast<std::streamoff>(s_.tellg()));
