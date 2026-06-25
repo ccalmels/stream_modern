@@ -49,8 +49,9 @@ Stream &Stream::operator>>(std::string &s) {
         return *this;
 
     for (u8 i = 0; i < size; i++) {
-        if ((*this) >> element)
-            s.push_back((char)element);
+        if (!((*this) >> element))
+            break;
+        s.push_back((char)element);
     }
 
     return *this;
