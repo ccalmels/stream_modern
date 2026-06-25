@@ -277,3 +277,64 @@ TEST_F(StreamFixturePrinter, SerializeDeserialize) {
                                     "0d000000"
                                     "066d6520746f6f"));
 }
+
+TEST_F(StreamFixture, InitialStateIsGood) {
+    Stream st;
+    EXPECT_TRUE(st);
+}
+
+TEST_F(StreamFixture, ReadPastEndSetsFailState) {
+    Stream st;
+    st << (uint32_t)42;
+
+    uint32_t v;
+    st >> v;
+    EXPECT_TRUE(st);
+    EXPECT_EQ(v, 42u);
+
+    uint8_t extra;
+    st >> extra;
+    EXPECT_FALSE(st);
+}
+
+TEST_F(StreamFixture, ExtractPastEndReturnsTruncated) {
+    Stream st;
+    st << (uint32_t)0xdeadbeef;
+
+    auto v = st.extract(8);
+    EXPECT_EQ(v, std::vector<u8>({0xef, 0xbe, 0xad, 0xde}));
+    EXPECT_FALSE(st);
+}
+
+TEST_F(StreamFixture, ExtractAllAfterPartialRead) {
+    Stream st;
+    st << (uint32_t)0xdeadbeef;
+    st << (uint32_t)0xcafebabe;
+
+    uint32_t v;
+    st >> v;
+    EXPECT_TRUE(st);
+
+    EXPECT_EQ(st.extract(), std::vector<u8>({0xbe, 0xba, 0xfe, 0xca}));
+    EXPECT_TRUE(st);
+}
+
+TEST_F(StreamFixture, ReadStringExhaustedMidStream) {
+    Stream st;
+    st << std::vector<u8>({5, 'a', 'b', 'c'});
+
+    std::string s;
+    st >> s;
+    EXPECT_FALSE(st);
+    EXPECT_EQ(s, std::string("abc"));
+}
+
+TEST_F(StreamFixture, StringTruncatedAt255) {
+    Stream st;
+    st << std::string(300, 'x');
+
+    std::string out;
+    st >> out;
+    EXPECT_TRUE(st);
+    EXPECT_EQ(out, std::string(255, 'x'));
+}
