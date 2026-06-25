@@ -45,6 +45,9 @@ Stream &Stream::operator>>(std::string &s) {
 
     (*this) >> size;
 
+    if (!*this)
+        return *this;
+
     for (u8 i = 0; i < size; i++) {
         if ((*this) >> element)
             s.push_back((char)element);
