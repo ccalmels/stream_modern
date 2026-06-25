@@ -22,9 +22,16 @@ void Stream::extract_into(std::vector<u8> &v, size_t n) {
 }
 
 Stream &Stream::operator<<(std::string_view sv) {
-    s_ << (u8)sv.size();
+    size_t size = sv.size();
 
-    std::for_each(sv.begin(), sv.end(), [this](const auto e) { s_ << (u8)e; });
+    if (size > 0xff) {
+        size = 0xff;
+    }
+
+    s_ << (u8)size;
+
+    for (size_t i = 0; i < size; i++)
+        s_ << (u8)sv[i];
 
     return *this;
 }
