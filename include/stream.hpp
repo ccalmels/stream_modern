@@ -50,8 +50,8 @@ class Stream {
     std::vector<u8> extract(size_t n);
     void extract_into(std::vector<u8> &v, size_t n);
 
-    std::vector<u8> extract() { return extract(s_.view().size()); }
-    void extract_into(std::vector<u8> &v) { extract_into(v, s_.view().size()); }
+    std::vector<u8> extract() { return extract(remaining()); }
+    void extract_into(std::vector<u8> &v) { extract_into(v, remaining()); }
 
     Stream &operator<<(const std::ranges::contiguous_range auto &range) {
         s_.write(std::ranges::cdata(range), std::ranges::size(range));
@@ -68,5 +68,10 @@ class Stream {
     friend std::ostream &operator<<(std::ostream &os, const Stream &st);
 
   private:
+    size_t remaining() {
+        return s_.view().size() -
+               static_cast<size_t>(static_cast<std::streamoff>(s_.tellg()));
+    }
+
     std::basic_stringstream<u8> s_;
 };
