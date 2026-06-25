@@ -30,26 +30,20 @@ using u8 = uint8_t;
 class Stream {
   public:
     template <std::integral T> Stream &operator<<(const T &value) {
-        if constexpr (std::endian::native == std::endian::big) {
-            T swapped = byteswap<T>(value);
-
-            s_.write((const u8 *)&swapped, sizeof(swapped));
-        } else
-            s_.write((const u8 *)&value, sizeof(value));
-
+        T v = value;
+        if constexpr (std::endian::native == std::endian::big)
+            v = byteswap<T>(v);
+        auto bytes = std::bit_cast<std::array<u8, sizeof(T)>>(v);
+        s_.write(bytes.data(), bytes.size());
         return *this;
     }
 
     template <std::integral T> Stream &operator>>(T &value) {
-        if constexpr (std::endian::native == std::endian::big) {
-            T swapped;
-
-            s_.read((u8 *)&swapped, sizeof(swapped));
-
-            value = byteswap<T>(swapped);
-        } else
-            s_.read((u8 *)&value, sizeof(value));
-
+        std::array<u8, sizeof(T)> bytes;
+        s_.read(bytes.data(), bytes.size());
+        value = std::bit_cast<T>(bytes);
+        if constexpr (std::endian::native == std::endian::big)
+            value = byteswap<T>(value);
         return *this;
     }
 
