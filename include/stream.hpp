@@ -9,9 +9,9 @@
 #include <sstream>
 #include <vector>
 
-#if __cpp_lib_byteswap < 202110L
-// snippet comes from cppreference.com
 template <std::integral T> constexpr T byteswap(T value) noexcept {
+#if __cpp_lib_byteswap < 202110L
+    // snippet comes from cppreference.com
     static_assert(std::has_unique_object_representations_v<T>,
                   "T may not have padding bits");
 
@@ -21,11 +21,10 @@ template <std::integral T> constexpr T byteswap(T value) noexcept {
     std::ranges::reverse(value_representation);
 
     return std::bit_cast<T>(value_representation);
-}
 #else
-template <typename T> const auto byteswap = std::byteswap<T>;
+    return std::byteswap<T>(value);
 #endif
-
+}
 using u8 = uint8_t;
 
 class Stream {
