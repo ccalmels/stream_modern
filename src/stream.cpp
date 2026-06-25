@@ -23,10 +23,7 @@ Stream &Stream::operator<<(std::string_view sv) {
     u8 sz = static_cast<u8>(size);
     write_(&sz, 1);
 
-    for (size_t i = 0; i < size; i++) {
-        u8 b = static_cast<u8>(sv[i]);
-        write_(&b, 1);
-    }
+    write_(reinterpret_cast<const u8 *>(sv.data()), size);
 
     return *this;
 }
